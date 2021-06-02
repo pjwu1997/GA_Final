@@ -204,8 +204,7 @@ class GA:
 				count += 1
 			else : count = 0 
 			bestFitness = bestChromo.getFittness()
-
-			print(bestFitness)
+			
 			if count > self.maxFGen:
 				return bestChromo
 			# self.printPopulation()

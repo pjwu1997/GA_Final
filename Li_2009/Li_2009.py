@@ -4,23 +4,18 @@ from GA import GA
 import globals 
 from scipy.io import mmread
 
+def loadData(path):
+	sparse = mmread(path)
+	globals.AMartix = sparse.todense()
+	globals.AMartix = np.array(globals.AMartix)
+	globals.N_edge = sum(sum(globals.AMartix))/2
+
 def main():
 	globals.globals()
-	f = open("out.ucidata-zachary")
+	f = "../soc-karate.mtx"
+	loadData(f)
 
-	f.readline()
-	parm_array = f.readline().split()
-	globals.N_edge = int(parm_array[1])
-	N_node = int(parm_array[2])
-
-	print(globals.N_edge,N_node)
-	globals.AMartix = np.zeros([N_node,N_node])
-	for i in range(globals.N_edge):
-		arr = f.readline().split()
-		globals.AMartix[int(arr[0])-1][int(arr[1])-1] = 1
-		globals.AMartix[int(arr[1])-1][int(arr[0])-1] = 1
-
-	ell = N_node
+	ell = len(globals.AMartix)
 	N_module = 4
 	nInitial = 20
 	pc = 0.8
@@ -39,6 +34,7 @@ def main():
 		result = ga.run()
 		if result.getFittness() >= bestQ:
 			print(result.genes)
+			print("Modularity: ", result.getFittness())
 			print("+")
 		else: print("-, ",result.getFitness())
 
