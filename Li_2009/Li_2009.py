@@ -24,19 +24,20 @@ def main():
 	maxGen = 3000
 	maxFGen = 100
 
-	repeat = 1
-	bestQ = 0.401
+	repeat = 5
+	bestQ = 0.42
 
 	ga = GA(ell,N_module,nInitial,pc,pm,lsN,maxGen,maxFGen)
 
 	for i in range(repeat):
 		ga.initPoluation()
 		result = ga.run()
-		if result.getFittness() >= bestQ:
-			print(result.genes)
-			print("Modularity: ", result.getFittness())
-			print("+")
-		else: print("-, ",result.getFitness())
+		if result.getFitness() >= bestQ:
+			print("[",i,"], +")
+		else: 
+			print("[",i,"], -")
+		print("* fitness:",result.getFitness())
+		print("* genes:",result.genes)
 
 if __name__ == "__main__":
     main()

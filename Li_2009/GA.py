@@ -32,11 +32,11 @@ class GA:
 		i = 0
 		while i < self.nCurrent*p:
 			winner = i
-			winner_fittness = self.population[i].getFittness()
+			winner_fitness = self.population[i].getFitness()
 			for j in range(1,p):
-				rival_fitness = self.population[i+j].getFittness()
-				if winner_fittness < rival_fitness:
-					winner_fittness = rival_fitness
+				rival_fitness = self.population[i+j].getFitness()
+				if winner_fitness < rival_fitness:
+					winner_fitness = rival_fitness
 					winner = i + j
 			selected_index.append(winner)
 			i += p
@@ -45,7 +45,7 @@ class GA:
 	def RWSelection(self):
 	  
 	    # Computes the totallity of the population fitness
-	    population_fitness = [chromosome.getFittness() for chromosome in self.population]
+	    population_fitness = [chromosome.getFitness() for chromosome in self.population]
 	    f_min = min(population_fitness)
 
 	    if f_min < 0: population_fitness = [i-f_min for i in population_fitness]
@@ -71,27 +71,6 @@ class GA:
 		uni_module = np.unique(uni_module)
 		return len(uni_module) == self.N_module
 
-	def crossover_ver1(self):
-		newPopulation = [Chromosome(ell) for i in range(nCurrent)]
-
-		for n in range(self.nCurrent):
-
-			i = np.random.randint(0,nCurrent)
-			j = np.random.randint(0,nCurrent)
-			while i != j:
-				j = np.random.randint(0,nCurrent)
-
-			r = np.random.randint(0,self.ell)
-			r_module = self.population[i].getVal(r)
-
-			for k in range(self.ell):
-				if self.population[i].getVal(k) == r_module:
-					newPopulation[n].setVal(k,r_module)
-				else:
-					newPopulation[n].setVal(k,self.population[j].getVal(k))
-
-		self.population = newPopulation
-
 	def crossover(self):
 
 		newPopulation = []
@@ -113,15 +92,15 @@ class GA:
 				uni_module = np.unique(uni_module)
 
 				count = 0
-				while not self.checkValid(copyChromo) and count < 10:
-					r = np.random.randint(0,self.ell)
-					r_module = self.population[i].getVal(r)
+				# while not self.checkValid(copyChromo) and count < 10:
+				# 	r = np.random.randint(0,self.ell)
+				# 	r_module = self.population[i].getVal(r)
 
-					copyChromo = copy.deepcopy(self.population[j])
-					for k in range(self.ell):
-						if self.population[i].getVal(k) == r_module:
-							copyChromo.setVal(k,r_module)
-					count += 1
+				# 	copyChromo = copy.deepcopy(self.population[j])
+				# 	for k in range(self.ell):
+				# 		if self.population[i].getVal(k) == r_module:
+				# 			copyChromo.setVal(k,r_module)
+				# 	count += 1
 
 				if count >= 10:
 					newPopulation.append(self.population[j])
@@ -155,16 +134,16 @@ class GA:
 				if globals.AMartix[j][q]:
 					newChromo.setVal(q,chromosome.getVal(j))
 			count = 0 
-			while not self.checkValid(newChromo) and count < 10:
-				newChromo = copy.deepcopy(chromosome)
-				j = np.random.randint(0,self.ell)
-				for q in range(self.ell):
-					if globals.AMartix[j][q]:
-						newChromo.setVal(q,chromosome.getVal(j))
+			# while not self.checkValid(newChromo) and count < 10:
+			# 	newChromo = copy.deepcopy(chromosome)
+			# 	j = np.random.randint(0,self.ell)
+			# 	for q in range(self.ell):
+			# 		if globals.AMartix[j][q]:
+			# 			newChromo.setVal(q,chromosome.getVal(j))
 
 			if count >= 10: continue
 
-			if newChromo.getFittness() >= bestChromo.getFittness():
+			if newChromo.getFitness() >= bestChromo.getFitness():
 				bestChromo = newChromo
 
 		return bestChromo
@@ -180,13 +159,13 @@ class GA:
 			self.population[i] = self.localSearch(self.population[i])
 
 		bestIndex = 0
-		bestFitness = self.population[bestIndex].getFittness()
+		bestFitness = self.population[bestIndex].getFitness()
 		for i in range(self.nCurrent):
-			if self.population[i].getFittness() > bestFitness:
+			if self.population[i].getFitness() > bestFitness:
 				bestIndex = i
-				bestFitness = self.population[i].getFittness()
+				bestFitness = self.population[i].getFitness()
 		
-		if bestFitness < prevBest.getFittness():
+		if bestFitness < prevBest.getFitness():
 			self.population[bestIndex] = prevBest
 			return prevBest
 
@@ -196,15 +175,15 @@ class GA:
 
 		count = 0
 		bestChromo = Chromosome(self.ell, self.N_module)
-		bestFitness = bestChromo.getFittness()
+		bestFitness = bestChromo.getFitness()
 
 		for i in range(self.maxGen):
 			bestChromo = self.oneRun(bestChromo)
-			if bestChromo.getFittness() <= bestFitness:
+			if bestChromo.getFitness() <= bestFitness:
 				count += 1
 			else : count = 0 
-			bestFitness = bestChromo.getFittness()
-			
+			bestFitness = bestChromo.getFitness()
+
 			if count > self.maxFGen:
 				return bestChromo
 			# self.printPopulation()

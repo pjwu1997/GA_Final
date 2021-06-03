@@ -10,10 +10,10 @@ class Chromosome:
 		for i in range(ell):
 			genes += [np.random.randint(0,self.N_module)]
 
-		while len(np.unique(genes)) < N_module:
-			genes = []
-			for i in range(ell):
-				genes += [np.random.randint(0,self.N_module)]
+		# while len(np.unique(genes)) < N_module:
+		# 	genes = []
+		# 	for i in range(ell):
+		# 		genes += [np.random.randint(0,self.N_module)]
 
 		self.genes = np.array(genes)
 
@@ -29,7 +29,7 @@ class Chromosome:
 	def getVal(self,index):
 		return self.genes[index]
 
-	def getFittness(self):
+	def getFitness(self):
 		if not self.evaluated:
 			self.fitness = self.modularity()
 			self.evaluated = True
@@ -40,14 +40,18 @@ class Chromosome:
 		e_pq = np.zeros(self.N_module)
 		for p in range(self.ell):
 			p_module = self.genes[p]
-			for q in range(p+1,self.ell):
+			for q in range(self.ell):
 				if p_module == self.genes[q]:
-					e_pp[p_module] += globals.AMartix[p][q]/(globals.N_edge)
-				else:
-					e_pq[p_module] += globals.AMartix[p][q]/(globals.N_edge)
+					e_pp[p_module] += globals.AMartix[p][q]
+				else: 
+					e_pq[p_module] += globals.AMartix[p][q]
+		e_pp /= 2
+		e_pq += e_pp
+		# print(e_pp,e_pq)
 
-		Q_value = sum(e_pp) - sum(e_pq**2)
+		e_pp /= globals.N_edge
+		e_pq /= globals.N_edge*2
+
+		Q_value = sum(e_pp - e_pq**2)
 		return Q_value
-
-
 	
