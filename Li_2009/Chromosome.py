@@ -46,11 +46,12 @@ class Chromosome:
 				else: 
 					e_pq[p_module] += globals.AMartix[p][q]
 		e_pp /= 2
+		e_pq /= 2
 		e_pq += e_pp
 		# print(e_pp,e_pq)
 
 		e_pp /= globals.N_edge
-		e_pq /= globals.N_edge*2
+		e_pq /= globals.N_edge
 
 		Q_value = sum(e_pp - e_pq**2)
 		return Q_value
