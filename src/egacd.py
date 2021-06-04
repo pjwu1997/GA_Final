@@ -72,14 +72,14 @@ class EGACD():
         population = self.initialization()
         populationDouble = self.operator(population)
         populationDouble = self.localSearch(populationDouble)
-        populationSeleted = self.selection(populationDouble)
-        bestModularity = populationSeleted[0].modularity
-        return bestModularity, populationSeleted
+        populationSelected = self.selection(populationDouble)
+        bestModularity = populationSelected[0].modularity
+        return bestModularity, populationSelected
         
 if __name__ == '__main__':
     path ='./soc-karate/soc-karate.mtx'
     mtx = loadDataset(path)
     egacd = EGACD(path, 50, 0.8, 100)
-    egacd.oneRun()
+    bestModularity, populationSelected = egacd.oneRun()
     
 

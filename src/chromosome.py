@@ -88,16 +88,3 @@ class Chromosome():
             Qvalue += inValue / self.edge
             Qvalue -= (outValue / (self.edge * 2))**2
         self.modularity = Qvalue
-
-if __name__ == '__main__':
-    path ='./soc-karate/soc-karate.mtx'
-    mtx = loadDataset(path)
-    chromosome = Chromosome(mtx)
-    chromosome.clusterize()
-    chromosome.localSearch()
-
-    # print(chromosome.chromosome)
-    # print(chromosome.cluster)
-    # print(chromosome.clusterNum)
-    chromosome.setModularity()
-    print(chromosome.modularity)
