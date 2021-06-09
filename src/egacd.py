@@ -4,6 +4,8 @@ from scipy.io import mmread
 import numpy as np
 from src.chromosome import Chromosome
 from src.util import loadDataset
+import collections, copy
+import time
 
 class EGACD():
     def __init__(self, path, populationsSize, pc, generation):
@@ -17,6 +19,32 @@ class EGACD():
         population = [Chromosome(self.mtx) for _ in range(self.populationSize)]
         return population
     
+    def linkageIdentify(self,population):
+        populationMatrix = []
+        for chrom in population:
+            populationMatrix.append(chrom.chromosome)
+
+        populationMatrixTrans = np.array(populationMatrix).transpose()
+
+        dicArray = []
+        for i in range(self.chromosomeLen):
+            dicArray.append(collections.Counter(populationMatrixTrans[i]))
+
+        return dicArray
+
+    def findBB(self,linkage):
+        startNode = np.random.randint(0,self.chromosomeLen)
+        BB = []
+        nextNode = startNode
+
+        while nextNode not in BB:
+            BB.append(nextNode)
+            nextNode = linkage[nextNode].most_common(1)[0][0]
+
+        BB.append(nextNode)
+        return np.array(BB)
+
+
     def crossover(self, parentA, parentB):
         prob = np.random.rand()
         if prob < self.pc:
@@ -68,18 +96,61 @@ class EGACD():
         selectedPopulation = sorted(population, key=lambda chromosome: chromosome.modularity, reverse=True)
         return selectedPopulation[:self.populationSize]
 
-    def oneRun(self):
-        population = self.initialization()
+    def oneRun(self,population):
         populationDouble = self.operator(population)
         populationDouble = self.localSearch(populationDouble)
+        # populationDouble = self.MBCrossover(populationDouble)
         populationSelected = self.selection(populationDouble)
         bestModularity = populationSelected[0].modularity
         return bestModularity, populationSelected
-        
+
+    def doIt(self):
+        population = self.initialization()
+        for _ in range(self.generation):
+            bestModularity,population = self.oneRun(population)
+
+        return bestModularity,population[0]
+
+    def MBCrossover(self,population):
+        linkageDictionary = self.linkageIdentify(population)
+        BB = self.findBB(linkageDictionary)
+
+        for i in range(len(population)):
+
+            population[i].clusterize()
+            population[i].setModularity()
+
+            tmp = copy.deepcopy(population[i])
+            for gene in range(len(BB)-1):
+                tmp.chromosome[BB[gene]] = BB[gene+1]
+            tmp.clusterize()
+            tmp.setModularity()
+
+            if tmp.modularity > population[i].modularity:
+                population[i] = tmp
+        return population
+
+
 if __name__ == '__main__':
     path ='./soc-karate/soc-karate.mtx'
     mtx = loadDataset(path)
     egacd = EGACD(path, 50, 0.8, 100)
-    bestModularity, populationSelected = egacd.oneRun()
+
+    mod_arr  = []
+    repeat = 10
+    time_arr = []
+
+    for i in range(repeat):
+        print("=== Start repeat [",i,"] ===")
+        startTime = time.time()
+        bestModularity, bestChromosome = egacd.doIt()
+        print("Best Modularity: ",bestModularity)
+        mod_arr.append(bestModularity)
+        time_arr.append(time.time()-startTime)
+        print("Time: ",time_arr[i])
+
+    print("BEST:", max(mod_arr))
+    print("AVG:", sum(mod_arr)/repeat)
+    print("AVG DURATION:",sum(time_arr)/repeat)
     
 
