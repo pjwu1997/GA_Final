@@ -4,6 +4,7 @@ from scipy.io import mmread
 import numpy as np
 from src.chromosome import Chromosome
 from src.util import loadDataset
+import time
 
 class EGACD():
     def __init__(self, path, populationsSize, pc, generation):
@@ -71,7 +72,6 @@ class EGACD():
     def oneRun(self,population):
         populationDouble = self.operator(population)
         populationDouble = self.localSearch(populationDouble)
-        # populationDouble = self.MBCrossover(populationDouble)
         populationSelected = self.selection(populationDouble)
         bestModularity = populationSelected[0].modularity
         return bestModularity, populationSelected
