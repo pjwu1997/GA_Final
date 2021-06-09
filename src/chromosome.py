@@ -73,18 +73,18 @@ class Chromosome():
 
     def setModularity(self):
         Qvalue = 0
-        for c in range(1, self.clusterNum):
+        for c in range(1, self.clusterNum+1):
             inValue = 0
             outValue = 0
             for i in range(self.chromosomeLen):
                 for j in range(i + 1, self.chromosomeLen):
                     if self.cluster[i] == c and self.cluster[j] == c:
                         inValue += self.mtx[i, j]
-                        outValue += self.mtx[i, j]
                     elif self.cluster[i] != c and self.cluster[j] == c:
-                        outValue += self.mtx[i, j]
+                        outValue += self.mtx[i, j]/2
                     elif self.cluster[j] != c and self.cluster[i] == c:
-                        outValue +=self.mtx[i, j]
+                        outValue +=self.mtx[i, j]/2
+            outValue += inValue
             Qvalue += inValue / self.edge
-            Qvalue -= (outValue / (self.edge * 2))**2
+            Qvalue -= (outValue / self.edge)**2
         self.modularity = Qvalue
