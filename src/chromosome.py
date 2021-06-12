@@ -18,6 +18,7 @@ class Chromosome():
             chromosome[gene] = np.random.choice(neighbor)
         self.chromosome = chromosome
         self.modularity = None
+        self.evaluated = False
 
     def __str__(self):
         return str(self.chromosome)
@@ -46,6 +47,7 @@ class Chromosome():
         self.chromosome[mutateGene] = np.random.choice(fitNeighbor)
 
         self.clusterNum = len(np.unique(self.cluster))
+        self.evaluated = False
 
     def __checkNeighbor(self, neighbors):
         flag = 0
@@ -86,3 +88,4 @@ class Chromosome():
             Qvalue += inValue / self.edge
             Qvalue -= (outValue / self.edge)**2
         self.modularity = Qvalue
+        self.evaluated = True

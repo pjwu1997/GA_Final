@@ -64,6 +64,7 @@ class EGACD():
         mutateGene = np.random.randint(self.chromosomeLen)
         neighbor = np.where(self.mtx[mutateGene]==1)[1]
         children.chromosome[mutateGene] = np.random.choice(neighbor)
+        children.evaluated = False
         return children
 
 
@@ -87,22 +88,29 @@ class EGACD():
     
     def localSearch(self, population):
         for chromosome in population:
-            chromosome.clusterize()
+            if not chromosome.evaluated:
+                chromosome.clusterize()
             chromosome.localSearch()
             chromosome.setModularity()
         return population
 
-    def selection(self, population):
+    def selection(self, population,size):
         selectedPopulation = sorted(population, key=lambda chromosome: chromosome.modularity, reverse=True)
-        return selectedPopulation[:self.populationSize]
+        return selectedPopulation[:size]
 
     def oneRun(self,population):
         populationDouble = self.operator(population)
-        populationDouble = self.localSearch(populationDouble)
-        # populationDouble = self.MBCrossover(populationDouble)
-        populationSelected = self.selection(populationDouble)
+        populationDouble = self.MBCrossover(populationDouble)
+        # populationDouble = self.localSearch(populationDouble)
+        populationSelected = self.selection(populationDouble,self.populationSize)
         bestModularity = populationSelected[0].modularity
         return bestModularity, populationSelected
+
+    def oneRunMB(self,population):
+        population = self.MBCrossover(population)
+        population = self.localSearch(population)
+        bestModularity = population[0].modularity
+        return bestModularity, population
 
     def doIt(self):
         population = self.initialization()
@@ -112,14 +120,18 @@ class EGACD():
         return bestModularity,population[0]
 
     def MBCrossover(self,population):
-        linkageDictionary = self.linkageIdentify(population)
+
+        for chrom in population:
+            if not chrom.evaluated:
+                chrom.clusterize()
+                chrom.setModularity()
+
+        populationSelected = self.selection(population,int(self.populationSize/2))
+        linkageDictionary = self.linkageIdentify(populationSelected)
+
         BB = self.findBB(linkageDictionary)
 
         for i in range(len(population)):
-
-            population[i].clusterize()
-            population[i].setModularity()
-
             tmp = copy.deepcopy(population[i])
             for gene in range(len(BB)-1):
                 tmp.chromosome[BB[gene]] = BB[gene+1]
@@ -134,7 +146,7 @@ class EGACD():
 if __name__ == '__main__':
     path ='./soc-karate/soc-karate.mtx'
     mtx = loadDataset(path)
-    egacd = EGACD(path, 50, 0.8, 100)
+    egacd = EGACD(path, 100, 0.8, 100)
 
     mod_arr  = []
     repeat = 10
