@@ -6,6 +6,7 @@ from src.chromosome import Chromosome
 from src.util import loadDataset
 import collections, copy
 import time
+import src.globals
 
 class EGACD():
     def __init__(self, path, populationsSize, pc, generation):
@@ -139,18 +140,26 @@ if __name__ == '__main__':
     mod_arr  = []
     repeat = 10
     time_arr = []
+    nfe_arr = []
 
     for i in range(repeat):
+        src.globals.nfe = 0
         print("=== Start repeat [",i,"] ===")
         startTime = time.time()
         bestModularity, bestChromosome = egacd.doIt()
+
         print("Best Modularity: ",bestModularity)
         mod_arr.append(bestModularity)
+
         time_arr.append(time.time()-startTime)
         print("Time: ",time_arr[i])
+
+        nfe_arr.append(src.globals.nfe)
+        print("NFE: ",src.globals.nfe)
 
     print("BEST:", max(mod_arr))
     print("AVG:", sum(mod_arr)/repeat)
     print("AVG DURATION:",sum(time_arr)/repeat)
-    
+    print("AVG NFE:", sum(nfe_arr)/repeat)
 
+    

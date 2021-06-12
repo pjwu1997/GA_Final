@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import stats
 from src.util import loadDataset
+import src.globals
 
 class Chromosome():
     def __init__(self, mtx):
@@ -86,3 +87,4 @@ class Chromosome():
             Qvalue += inValue / self.edge
             Qvalue -= (outValue / self.edge)**2
         self.modularity = Qvalue
+        src.globals.nfe += 1
