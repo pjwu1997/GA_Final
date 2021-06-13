@@ -95,30 +95,88 @@ class EGACD():
             chromosome.setModularity()
         return population
 
+    def samplePopulation(self,linkageDictionary):
+        newPopulationValue = []
+        for gene in linkageDictionary:
+            items = []
+            p = []
+            for i in gene.items():
+                items.append(i[0])
+                p.append(i[1]/self.countSize)
+            newPopulationValue.append(np.random.choice(items,self.populationSize,p))
+
+        newPopulationValue = np.array(newPopulationValue).transpose()
+
+        newPopulation = [Chromosome(self.mtx) for _ in range(self.populationSize)]
+        for i in range(self.populationSize):
+            newPopulation[i].chromosome = newPopulationValue[i]
+
+        return newPopulation
+
+    def checkConverage(self,linkageDictionary):
+        chromP = []
+        converged = False
+        for gene in linkageDictionary:
+            if gene.most_common(1)[0][1] != self.countSize:
+                return False
+        return True
+
     def selection(self, population,size):
         selectedPopulation = sorted(population, key=lambda chromosome: chromosome.modularity, reverse=True)
         return selectedPopulation[:size]
 
     def oneRun(self,population):
         populationDouble = self.operator(population)
-        populationDouble = self.MBCrossover(populationDouble)
-        # populationDouble = self.localSearch(populationDouble)
+        populationDouble = self.localSearch(populationDouble)
         populationSelected = self.selection(populationDouble,self.populationSize)
         bestModularity = populationSelected[0].modularity
         return bestModularity, populationSelected
 
-    def oneRunMB(self,population):
-        population = self.MBCrossover(population)
-        population = self.localSearch(population)
-        bestModularity = population[0].modularity
-        return bestModularity, population
+    def oneRunCGAwOp(self,population):
+        populationDouble = self.operator(population)
+        populationDouble = self.localSearch(populationDouble)
+
+        self.countSize = self.populationSize
+        populationSelected = self.selection(population,self.countSize)
+        linkageDictionary = self.linkageIdentify(populationSelected)
+        population = self.samplePopulation(linkageDictionary)
+
+        return population, linkageDictionary
+
+    def oneRunCGA(self,population):
+        for chromosome in population:
+            chromosome.clusterize()
+            chromosome.setModularity()
+
+        self.countSize = int(self.populationSize/2)
+        populationSelected = self.selection(population,self.countSize)
+
+        linkageDictionary = self.linkageIdentify(populationSelected)
+        population = self.samplePopulation(linkageDictionary)
+
+        return population, linkageDictionary
 
     def doIt(self):
         population = self.initialization()
-        for _ in range(self.generation):
-            bestModularity,population = self.oneRun(population)
+        population, linkageDictionary = self.oneRunCGA(population)
 
-        return bestModularity,population[0]
+        count = 0
+        while not self.checkConverage(linkageDictionary):
+            population, linkageDictionary = self.oneRunCGAwOp(population)
+            if count % 30 ==0:
+                print(linkageDictionary)
+            count  += 1
+
+        bestValue = np.array([linkage.most_common(1)[0][0] for linkage in linkageDictionary])
+        bestChromosome = Chromosome(self.mtx)
+        bestChromosome.chromosome = bestValue
+        bestChromosome.clusterize()
+        bestChromosome.setModularity()
+        bestModularity = bestChromosome.modularity
+
+        return bestModularity, bestChromosome
+
+        return bestModularity,bestChromosome
 
     def MBCrossover(self,population):
 
