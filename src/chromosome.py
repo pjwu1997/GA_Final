@@ -2,19 +2,20 @@ import numpy as np
 from scipy import stats
 from src.util import loadDataset
 
+import src.globals as globals
+
 class Chromosome():
-    def __init__(self, mtx):
+    def __init__(self):
         # self.mtx = self.loadDataset(path)
-        self.mtx = mtx
-        self.edge = np.count_nonzero(self.mtx == 1) / 2
-        self.chromosomeLen = self.mtx.shape[0]
+        self.edge = np.count_nonzero(globals.reduced_mtx == 1) / 2
+        self.chromosomeLen = globals.reduced_mtx.shape[0]
         
         self.cluster = np.zeros(self.chromosomeLen, dtype='int')
         self.clusterNum = 1
 
         chromosome = np.zeros((self.chromosomeLen), dtype='int')
         for gene in range(self.chromosomeLen):
-            neighbor = np.where(self.mtx[gene]==1)[1]
+            neighbor = np.where(globals.reduced_mtx[gene]==1)[1]
             chromosome[gene] = np.random.choice(neighbor)
         self.chromosome = chromosome
         self.modularity = None
@@ -37,7 +38,7 @@ class Chromosome():
         mutateGene = np.random.randint(self.chromosomeLen)
 
         # find the nodes connected to mutateGene
-        neighbors = np.where(self.mtx[mutateGene]==1)[1]
+        neighbors = np.where(globals.reduced_mtx[mutateGene]==1)[1]
 
         # find which cluster the mutateGene connects to the most
         mutateNum = stats.mode(self.cluster[neighbors])[0][0]
@@ -60,6 +61,7 @@ class Chromosome():
 
     def __getNeighbors(self, gene):
         neighbors = [gene]
+        # print(self.chromosome)
         nxtGene = self.chromosome[gene]
         while True:
             if nxtGene not in neighbors:
@@ -76,12 +78,12 @@ class Chromosome():
             for i in range(self.chromosomeLen):
                 for j in range(i + 1, self.chromosomeLen):
                     if self.cluster[i] == c and self.cluster[j] == c:
-                        inValue += self.mtx[i, j]
+                        inValue += globals.reduced_mtx[i, j]
                         # outValue += self.mtx[i, j]
                     elif self.cluster[i] != c and self.cluster[j] == c:
-                        outValue += self.mtx[i, j]/2
+                        outValue += globals.reduced_mtx[i, j]/2
                     elif self.cluster[j] != c and self.cluster[i] == c:
-                        outValue +=self.mtx[i, j]/2
+                        outValue += globals.reduced_mtx[i, j]/2
             outValue += inValue
             Qvalue += inValue / self.edge
             Qvalue -= (outValue / self.edge)**2

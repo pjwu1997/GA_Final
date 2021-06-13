@@ -3,20 +3,23 @@ from numpy.lib.function_base import _calculate_shapes
 from scipy.io import mmread
 import numpy as np
 from src.chromosome import Chromosome
-from src.util import loadDataset
+from src.util import loadDataset, reducegraph, concateReduced, setModularity
+import src.globals as globals
+
 import collections, copy
 import time
 
+
+
 class EGACD():
-    def __init__(self, path, populationsSize, pc, generation):
-        self.mtx = loadDataset(path)
+    def __init__(self, populationsSize, pc, generation):
         self.populationSize = populationsSize
-        self.chromosomeLen = self.mtx.shape[0]
+        self.chromosomeLen = globals.reduced_mtx.shape[0]
         self.generation = generation
         self.pc = pc
 
     def initialization(self):
-        population = [Chromosome(self.mtx) for _ in range(self.populationSize)]
+        population = [Chromosome() for _ in range(self.populationSize)]
         return population
     
     def linkageIdentify(self,population):
@@ -51,7 +54,8 @@ class EGACD():
             position = np.random.randint(1, self.chromosomeLen)
 
             # init chromosome (children)
-            childrenA, childrenB = Chromosome(self.mtx), Chromosome(self.mtx)
+            # childrenA, childrenB = Chromosome(globals.reduced_mtx), Chromosome(globals.reduced_mtx)
+            childrenA, childrenB = Chromosome(), Chromosome()
             # one point crossover operation
             childrenA.chromosome = np.concatenate((parentA.chromosome[:position+1], parentB.chromosome[position+1:]))
             childrenB.chromosome = np.concatenate((parentB.chromosome[:position+1], parentA.chromosome[position+1:]))
@@ -61,8 +65,10 @@ class EGACD():
 
     def mutation(self, parent):
         children = parent
+        # print(self.chromosomeLen)
         mutateGene = np.random.randint(self.chromosomeLen)
-        neighbor = np.where(self.mtx[mutateGene]==1)[1]
+        neighbor = np.where(globals.reduced_mtx[mutateGene]==1)[1]
+        # print(neighbor)
         children.chromosome[mutateGene] = np.random.choice(neighbor)
         return children
 
@@ -134,8 +140,16 @@ class EGACD():
 if __name__ == '__main__':
     path ='./soc-karate/soc-karate.mtx'
     mtx = loadDataset(path)
-    egacd = EGACD(path, 50, 0.8, 100)
-
+    isReduced = False
+    if (isReduced):
+        obj = reducegraph(path, 0.2)
+        globals.index_selected, globals.index_eliminated, globals.mtx, globals.reduced_mtx = \
+            obj['index_selected'], obj['index_eliminated'], obj['original_mtx'], obj['reduced_mtx']
+        edge = np.count_nonzero(mtx==1) / 2
+        egacd = EGACD(50, 0.8, 100)
+    else:
+        globals.reduced_mtx = loadDataset(path)
+        egacd = EGACD(50, 0.8, 100)
     mod_arr  = []
     repeat = 10
     time_arr = []
@@ -144,7 +158,12 @@ if __name__ == '__main__':
         print("=== Start repeat [",i,"] ===")
         startTime = time.time()
         bestModularity, bestChromosome = egacd.doIt()
+        if isReduced:
+            concateReduced(bestChromosome)
+            setModularity(bestChromosome, edge)
+            bestModularity = bestChromosome.modularity
         print("Best Modularity: ",bestModularity)
+        print("Best Chromosome: ",bestChromosome)
         mod_arr.append(bestModularity)
         time_arr.append(time.time()-startTime)
         print("Time: ",time_arr[i])
