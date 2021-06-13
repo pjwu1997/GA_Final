@@ -8,18 +8,18 @@ import numpy as np
 
 if __name__ == '__main__':
     path ='./soc-karate/soc-karate.mtx'
-    mtx = loadDataset(path)
+    
+    # adj is csr_matrix, mtx is coo_matrix
+    # you can change their type via scipy library
+    adj, mtx = loadDataset(path)
 
     modularity_bst = 0
     modularity_avg = 0
     nfe_bst = 0
     nfe_avg = 0
 
-    for _ in range(1):
-
-        G = nx.karate_club_graph()
-        cluster, nfe = ga_community_detection(G, population=30, generation=100, r = 1.5)
-        
+    for _ in range(100):
+        cluster, nfe = ga_community_detection(adj, population=30, generation=100, r = 1.5)
 
         if nfe_bst == 0 or nfe < nfe_bst:
             nfe_bst = nfe

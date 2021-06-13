@@ -6,8 +6,8 @@ __all__ = ["ga_community_detection"]
 
 
 def ga_community_detection(graph, population=300, generation=30, r=1.5):
-    Adj = nx.adjacency_matrix(graph)
-    nodes_length = graph.number_of_nodes()
+    Adj = graph
+    nodes_length = Adj.get_shape()[0]
 
     d = {"chrom": [__generate_chrom(nodes_length, Adj) for n in range(population)]}
     dframe = pd.DataFrame(data=d)
@@ -16,11 +16,11 @@ def ga_community_detection(graph, population=300, generation=30, r=1.5):
         lambda x: __community_score(x["chrom"], x["subsets"], r, Adj), axis=1
     )
 
-    call = 0
+    nfe = int(population)
     gen = 0
     population_count = population
     while gen < generation:
-        for i in range(int(np.floor(population / 10))):
+        for i in range(int(np.floor(population))):
             elites = dframe.sort_values("community_score", ascending=True)[
                 int(np.floor(population / 10)) :
             ]
@@ -32,7 +32,7 @@ def ga_community_detection(graph, population=300, generation=30, r=1.5):
             child = __mutation(child, Adj, 0.2)
             child_subsets = __find_subsets(child)
             child_cs = __community_score(child, child_subsets, r, Adj)
-            call += 1
+            nfe += 1
             dframe.loc[population_count] = [child, child_subsets, child_cs]
             population_count += 1
         dfsorted = dframe.sort_values("community_score", ascending=False)
@@ -42,14 +42,14 @@ def ga_community_detection(graph, population=300, generation=30, r=1.5):
     sorted_df = dframe.sort_values("community_score", ascending=False).index[0]
 
     nodes_subsets = dframe["subsets"][sorted_df]
-    nodes_list = list(graph.nodes())
+    nodes_list = np.arange(nodes_length).tolist()
     result = []
     for subs in nodes_subsets:
         subset = []
         for n in subs:
             subset.append(nodes_list[n])
         result.append(subset)
-    return result, call
+    return result, nfe
 
 
 def __generate_chrom(nodes_length, Adj):

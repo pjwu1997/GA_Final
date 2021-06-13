@@ -1,9 +1,10 @@
 from scipy.io import mmread
+from scipy import sparse
 import numpy as np
 def loadDataset(path):
-    mtx = mmread(path)
-    mtx = mtx.todense()
-    return mtx
+    adj = mmread(path).tocsr()
+    mtx = adj.todense()
+    return adj, mtx
 
 def modularity(cluster, mtx):
     chromosomeLen = mtx.shape[0]
