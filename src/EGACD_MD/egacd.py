@@ -3,24 +3,21 @@ from numpy.lib.function_base import _calculate_shapes
 from scipy.io import mmread
 import numpy as np
 from src.chromosome import Chromosome
-from src.util import loadDataset, reducegraph, concateReduced, setModularity
-import src.globals as globals
-
+from src.util import loadDataset
 import collections, copy
 import time
 import src.globals
 
-
-
 class EGACD():
-    def __init__(self, populationsSize, pc, generation):
+    def __init__(self, path, populationsSize, pc, generation):
+        self.mtx = loadDataset(path)
         self.populationSize = populationsSize
-        self.chromosomeLen = globals.reduced_mtx.shape[0]
+        self.chromosomeLen = self.mtx.shape[0]
         self.generation = generation
         self.pc = pc
 
     def initialization(self):
-        population = [Chromosome() for _ in range(self.populationSize)]
+        population = [Chromosome(self.mtx) for _ in range(self.populationSize)]
         return population
     
     def linkageIdentify(self,population):
@@ -55,8 +52,7 @@ class EGACD():
             position = np.random.randint(1, self.chromosomeLen)
 
             # init chromosome (children)
-            # childrenA, childrenB = Chromosome(globals.reduced_mtx), Chromosome(globals.reduced_mtx)
-            childrenA, childrenB = Chromosome(), Chromosome()
+            childrenA, childrenB = Chromosome(self.mtx), Chromosome(self.mtx)
             # one point crossover operation
             childrenA.chromosome = np.concatenate((parentA.chromosome[:position+1], parentB.chromosome[position+1:]))
             childrenB.chromosome = np.concatenate((parentB.chromosome[:position+1], parentA.chromosome[position+1:]))
@@ -66,11 +62,10 @@ class EGACD():
 
     def mutation(self, parent):
         children = parent
-        # print(self.chromosomeLen)
         mutateGene = np.random.randint(self.chromosomeLen)
-        neighbor = np.where(globals.reduced_mtx[mutateGene]==1)[1]
-        # print(neighbor)
+        neighbor = np.where(self.mtx[mutateGene]==1)[1]
         children.chromosome[mutateGene] = np.random.choice(neighbor)
+        children.evaluated = False
         return children
 
 
@@ -94,22 +89,29 @@ class EGACD():
     
     def localSearch(self, population):
         for chromosome in population:
-            chromosome.clusterize()
+            if not chromosome.evaluated:
+                chromosome.clusterize()
             chromosome.localSearch()
             chromosome.setModularity()
         return population
 
-    def selection(self, population):
+    def selection(self, population,size):
         selectedPopulation = sorted(population, key=lambda chromosome: chromosome.modularity, reverse=True)
-        return selectedPopulation[:self.populationSize]
+        return selectedPopulation[:size]
 
     def oneRun(self,population):
         populationDouble = self.operator(population)
-        populationDouble = self.localSearch(populationDouble)
-        # populationDouble = self.MBCrossover(populationDouble)
-        populationSelected = self.selection(populationDouble)
+        populationDouble = self.MBCrossover(populationDouble)
+        # populationDouble = self.localSearch(populationDouble)
+        populationSelected = self.selection(populationDouble,self.populationSize)
         bestModularity = populationSelected[0].modularity
         return bestModularity, populationSelected
+
+    def oneRunMB(self,population):
+        population = self.MBCrossover(population)
+        population = self.localSearch(population)
+        bestModularity = population[0].modularity
+        return bestModularity, population
 
     def doIt(self):
         population = self.initialization()
@@ -119,14 +121,18 @@ class EGACD():
         return bestModularity,population[0]
 
     def MBCrossover(self,population):
-        linkageDictionary = self.linkageIdentify(population)
+
+        for chrom in population:
+            if not chrom.evaluated:
+                chrom.clusterize()
+                chrom.setModularity()
+
+        populationSelected = self.selection(population,int(self.populationSize/2))
+        linkageDictionary = self.linkageIdentify(populationSelected)
+
         BB = self.findBB(linkageDictionary)
 
         for i in range(len(population)):
-
-            population[i].clusterize()
-            population[i].setModularity()
-
             tmp = copy.deepcopy(population[i])
             for gene in range(len(BB)-1):
                 tmp.chromosome[BB[gene]] = BB[gene+1]
@@ -141,43 +147,31 @@ class EGACD():
 if __name__ == '__main__':
     path ='./soc-karate/soc-karate.mtx'
     mtx = loadDataset(path)
-    isReduced = False
-    if (isReduced):
-        obj = reducegraph(path, 0.2)
-        globals.index_selected, globals.index_eliminated, globals.mtx, globals.reduced_mtx = \
-            obj['index_selected'], obj['index_eliminated'], obj['original_mtx'], obj['reduced_mtx']
-        edge = np.count_nonzero(mtx==1) / 2
-        egacd = EGACD(50, 0.8, 100)
-    else:
-        globals.reduced_mtx = loadDataset(path)
-        egacd = EGACD(50, 0.8, 100)
+    egacd = EGACD(path, 50, 0.8, 100)
+
     mod_arr  = []
     repeat = 10
     time_arr = []
     nfe_arr = []
-
     for i in range(repeat):
-        globals.nfe = 0
+        src.globals.nfe = 0
         print("=== Start repeat [",i,"] ===")
+
         startTime = time.time()
         bestModularity, bestChromosome = egacd.doIt()
-        if isReduced:
-            concateReduced(bestChromosome)
-            setModularity(bestChromosome, edge)
-            bestModularity = bestChromosome.modularity
+
         print("Best Modularity: ",bestModularity)
-        print("Best Chromosome: ",bestChromosome)
         mod_arr.append(bestModularity)
 
         time_arr.append(time.time()-startTime)
         print("Time: ",time_arr[i])
 
-        nfe_arr.append(globals.nfe)
-        print("NFE: ",globals.nfe)
+        nfe_arr.append(src.globals.nfe)
+        print("NFE: ",src.globals.nfe)
 
     print("BEST:", max(mod_arr))
     print("AVG:", sum(mod_arr)/repeat)
     print("AVG DURATION:",sum(time_arr)/repeat)
     print("AVG NFE:", sum(nfe_arr)/repeat)
-
     
+
