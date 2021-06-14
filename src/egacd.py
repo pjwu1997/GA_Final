@@ -101,7 +101,9 @@ class EGACD():
 
     def oneRun(self,population):
         populationDouble = self.operator(population)
+        before  = src.globals.nfe
         populationDouble = self.MBCrossover(populationDouble)
+        print(before,src.globals.nfe)
         # populationDouble = self.localSearch(populationDouble)
         populationSelected = self.selection(populationDouble,self.populationSize)
         bestModularity = populationSelected[0].modularity
@@ -127,6 +129,7 @@ class EGACD():
                 chrom.clusterize()
                 chrom.setModularity()
 
+        print(len(population),src.globals.nfe)
         populationSelected = self.selection(population,int(self.populationSize/2))
         linkageDictionary = self.linkageIdentify(populationSelected)
 
@@ -150,7 +153,7 @@ if __name__ == '__main__':
     egacd = EGACD(path, 50, 0.8, 100)
 
     mod_arr  = []
-    repeat = 10
+    repeat = 1
     time_arr = []
     nfe_arr = []
     for i in range(repeat):
