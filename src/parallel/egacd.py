@@ -334,12 +334,12 @@ class EGACD():
 
 
 if __name__ == '__main__':
-    path ='../soc-karate/soc-karate.mtx'
+    path ='../socfb-Caltech36/socfb-Caltech36.mtx'
     mtx = loadDataset(path)
-    isReduced = False
+    isReduced = True
     isParallel = True
     cpu_count = os.cpu_count()
-    num_workers = cpu_count
+    num_workers = 5
     pool = Pool(num_workers)
     if (isReduced):
         obj = reducegraph(path, 0.2)
@@ -359,7 +359,7 @@ if __name__ == '__main__':
         print("=== Start repeat [",i,"] ===")
         cpu_count = os.cpu_count()
         print('========Number of cpu: ' + str(cpu_count) + '===========')
-        print('Use all' + str(cpu_count) + ' cores.')
+        print('Use' + str(num_workers) + ' cores.')
         startTime = time.time()
         bestModularity, bestChromosome = egacd.doIt()
         if isReduced:
