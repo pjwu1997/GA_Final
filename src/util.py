@@ -28,8 +28,8 @@ def modularity(cluster, mtx):
         Qvalue -= (outValue / edge)**2
     return Qvalue
 
-def transfer_cluster(cluster):
-    cluster_np = np.zeros(34)
+def transfer_cluster(cluster, mtx):
+    cluster_np = np.zeros(mtx.shape[0])
     clusterNum = 1
     for subcluster in cluster:
         for node in subcluster:

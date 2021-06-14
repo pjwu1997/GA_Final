@@ -20,6 +20,7 @@ def ga_community_detection(graph, population=300, generation=30, r=1.5):
     gen = 0
     population_count = population
     while gen < generation:
+        print(gen)
         for i in range(int(np.floor(population))):
             elites = dframe.sort_values("community_score", ascending=True)[
                 int(np.floor(population / 10)) :
