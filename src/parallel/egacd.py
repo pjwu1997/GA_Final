@@ -354,6 +354,7 @@ if __name__ == '__main__':
     repeat = 10
     time_arr = []
     nfe_arr = []
+    cluster_arr = []
     for i in range(repeat):
         nfe = 0
         print("=== Start repeat [",i,"] ===")
@@ -370,6 +371,7 @@ if __name__ == '__main__':
         print("Best Chromosome: ",bestChromosome)
         print("Best cluster: ", bestChromosome.cluster)
         mod_arr.append(bestModularity)
+        cluster_arr.append([int(i) for i in bestChromosome.cluster])
 
         time_arr.append(time.time()-startTime)
         print("Time: ",time_arr[i])
@@ -377,7 +379,10 @@ if __name__ == '__main__':
         nfe_arr.append(egacd.nfe)
         print("NFE: ",egacd.nfe)
 
+    max_mod = max(max_arr)
+    max_index = max_arr.index(max_mod)
     print("BEST:", max(mod_arr))
     print("AVG:", sum(mod_arr)/repeat)
     print("AVG DURATION:",sum(time_arr)/repeat)
     print("AVG NFE:", sum(nfe_arr)/repeat)
+    np.save('cluster.npy',{'cluster': cluster_arr[max_index], 'mod': max_mod})

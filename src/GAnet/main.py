@@ -41,7 +41,7 @@ if __name__ == '__main__':
     mtx = loadDataset(path)
 
     mod_arr  = []
-    repeat = 2
+    repeat = 10
     time_arr = []
     nfe_arr = []
 
@@ -61,6 +61,7 @@ if __name__ == '__main__':
 
     if isParallel:
         result = pool.starmap(run_ganet, parameters)
+        print([a['mod'] for a in result])
         max_mod = max([a['mod'] for a in result])
         avg_mod = sum([a['mod'] for a in result]) / repeat
         max_index = [a['mod'] for a in result].index(max_mod)
@@ -73,6 +74,8 @@ if __name__ == '__main__':
         print("AVG DURATION:", avg_time)
         print("AVG NFE:", avg_nfe)
         print("Max cluster: ", max_cluster)
+        max_cluster = [int(i) for i in max_cluster]
+        np.save('graph.npy', {'cluster':max_cluster, 'mod': max_mod})
 
     else:
         for i in range(repeat):

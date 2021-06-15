@@ -56,6 +56,7 @@ def ga_community_detection(graph, population=300, generation=30, r=1.5):
 def __generate_chrom(nodes_length, Adj):
     chrom = np.array([], dtype=int)
     for x in range(nodes_length):
+        np.random.seed()
         rand = np.random.randint(0, nodes_length)
         while Adj[x, rand] != 1:
             rand = np.random.randint(0, nodes_length)
