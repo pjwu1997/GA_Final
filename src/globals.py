@@ -11,3 +11,5 @@ global index_selected
 global index_eliminated
 global edge
 global nfe
+global reduced_adj
+global adj

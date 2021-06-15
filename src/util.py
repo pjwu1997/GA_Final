@@ -88,3 +88,63 @@ def setModularity(Chromosome, edge):
         Qvalue += inValue / edge
         Qvalue -= (outValue / edge)**2
     Chromosome.modularity = Qvalue
+
+
+
+def concateReduced_ganet(cluster):
+    """
+    Construct full_chromosome and full_cluster.
+    """
+    full_cluster = np.zeros(globals.mtx.shape[0])
+    clusterNum = np.unique(cluster).shape[0]
+    full_cluster[globals.index_selected] = cluster
+
+    # find the nodes connected to outsideGene
+    for outsideGene in globals.index_eliminated:
+        # print('outside: ',np.array(self.full_mtx[outsideGene])[0].shape)
+        neighbors = np.where(np.array(globals.mtx[outsideGene])[0][globals.index_selected]==1)
+        if not neighbors:
+            full_cluster[outsideGene] = clusterNum + 1
+            clusterNum += 1
+        else:
+            neighbors = neighbors[0]
+
+        for index, neighbor in enumerate(neighbors):
+            neighbors[index] = globals.index_selected[neighbor]
+
+            # find which cluster the mutateGene connects to the most
+            changeNum = stats.mode(full_cluster[neighbors])[0][0]
+            fitNeighbor = np.where(full_cluster==changeNum)[0]
+            full_cluster[outsideGene] = changeNum
+    return full_cluster, clusterNum
+
+def modularity_ganet(cluster, mtx):
+    chromosomeLen = mtx.shape[0]
+    edge = np.count_nonzero(mtx == 1) / 2
+    clusterNum = np.unique(cluster).shape[0]
+
+    Qvalue = 0
+    for c in range(1, clusterNum+1):
+        inValue = 0
+        outValue = 0
+        for i in range(chromosomeLen):
+            for j in range(i + 1, chromosomeLen):
+                if cluster[i] == c and cluster[j] == c:
+                    inValue += mtx[i, j]
+                elif cluster[i] != c and cluster[j] == c:
+                    outValue += mtx[i, j]/2
+                elif cluster[j] != c and cluster[i] == c:
+                    outValue += mtx[i, j]/2
+        outValue += inValue
+        Qvalue += inValue / edge
+        Qvalue -= (outValue / edge)**2
+    return Qvalue
+
+def transfer_cluster(cluster, mtx):
+    cluster_np = np.zeros(mtx.shape[0])
+    clusterNum = 1
+    for subcluster in cluster:
+        for node in subcluster:
+            cluster_np[node] = clusterNum
+        clusterNum += 1
+    return cluster_np
