@@ -10,6 +10,10 @@ import time
 import EGACD_MD.globals as globals
 from multiprocessing import Pool
 
+def writeProgress(pro_arr):
+    f = open("progress.txt","w")
+    for gen in pro_arr:
+        f.write(str(gen[0])+'\t'+str(gen[1])+'\n')
 
 class EGACD():
     def __init__(self, populationsSize, pc, generation, isParallel):
@@ -131,8 +135,10 @@ class EGACD():
 
     def doIt(self):
         population = self.initialization()
+        self.nfe_mod_arr = []
         for _ in range(self.generation):
             bestModularity,population = self.oneRun(population)
+            self.nfe_mod_arr.append([self.nfe,bestModularity])
 
         return bestModularity,population[0]
 
@@ -200,16 +206,17 @@ if __name__ == '__main__':
         globals.index_selected, globals.index_eliminated, globals.mtx, globals.reduced_mtx = \
             obj['index_selected'], obj['index_eliminated'], obj['original_mtx'], obj['reduced_mtx']
         globals.edge = np.count_nonzero(mtx==1) / 2
-        egacd = EGACD(50, 0.8, 100, isParallel)
+        egacd = EGACD(30, 0.8, 50, isParallel)
     else:
         globals.reduced_mtx = loadDataset(path)
-        egacd = EGACD(50, 0.8, 100, isParallel)
+        egacd = EGACD(30, 0.8, 50, isParallel)
 
     mod_arr  = []
-    repeat = 10
+    repeat = 5
     time_arr = []
     nfe_arr = []
     cluster_arr = []
+    pro_arr = []
     for i in range(repeat):
         print("=== Start repeat [",i,"] ===")
         print('========Number of cpu: ' + str(cpu_count) + '===========')
@@ -225,6 +232,7 @@ if __name__ == '__main__':
         print("Best Cluster: ", bestChromosome.cluster)
         cluster_arr.append([int(i) for i in bestChromosome.cluster])
         mod_arr.append(bestModularity)
+        pro_arr.append(egacd.nfe_mod_arr)
 
         time_arr.append(time.time()-startTime)
         print("Time: ",time_arr[i])
@@ -234,10 +242,12 @@ if __name__ == '__main__':
 
     max_mod = max(mod_arr)
     max_index = mod_arr.index(max_mod)
+    max_pro = pro_arr[max_index]
     print("BEST:", max(mod_arr))
     print("AVG:", sum(mod_arr)/repeat)
     print("AVG DURATION:",sum(time_arr)/repeat)
     print("AVG NFE:", sum(nfe_arr)/repeat)
     np.save('cluster.npy',{'cluster': cluster_arr[max_index], 'mod': max_mod})
-    
+    if not isReduced:
+        writeProgress(max_pro)
 

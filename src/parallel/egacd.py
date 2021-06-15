@@ -50,6 +50,11 @@ def reducegraph(path, percentage):
         'reduced_mtx': sub_mtx.todense()
     }
 
+def writeProgress(pro_arr):
+    f = open("progress.txt","w")
+    for gen in pro_arr:
+        f.write(str(gen[0])+'\t'+str(gen[1])+'\n')
+
 def concateReduced(Chromosome):
     """
     Construct full_chromosome and full_cluster.
@@ -309,8 +314,11 @@ class EGACD():
 
     def doIt(self):
         population = self.initialization()
+        self.nfe_mod_arr = []
         for _ in range(self.generation):
             bestModularity,population = self.oneRun(population)
+            self.nfe_mod_arr.append([self.nfe,bestModularity])
+
         return bestModularity,population[0]
 
     def MBCrossover(self,population):
@@ -334,9 +342,9 @@ class EGACD():
 
 
 if __name__ == '__main__':
-    path ='../socfb-Caltech36/socfb-Caltech36.mtx'
+    path ='../soc-karate/soc-karate.mtx'
     mtx = loadDataset(path)
-    isReduced = True
+    isReduced = False
     isParallel = True
     cpu_count = os.cpu_count()
     num_workers = 5
@@ -346,15 +354,16 @@ if __name__ == '__main__':
         index_selected, index_eliminated, mtx, reduced_mtx = \
             obj['index_selected'], obj['index_eliminated'], obj['original_mtx'], obj['reduced_mtx']
         edge = np.count_nonzero(mtx==1) / 2
-        egacd = EGACD(50, 0.8, 100, isParallel)
+        egacd = EGACD(30, 0.8, 50, isParallel)
     else:
         reduced_mtx = loadDataset(path)
-        egacd = EGACD(50, 0.8, 100, isParallel)
+        egacd = EGACD(30, 0.8, 50, isParallel)
     mod_arr  = []
-    repeat = 10
+    repeat = 5
     time_arr = []
     nfe_arr = []
     cluster_arr = []
+    pro_arr = []
     for i in range(repeat):
         nfe = 0
         print("=== Start repeat [",i,"] ===")
@@ -372,6 +381,7 @@ if __name__ == '__main__':
         print("Best cluster: ", bestChromosome.cluster)
         mod_arr.append(bestModularity)
         cluster_arr.append([int(i) for i in bestChromosome.cluster])
+        pro_arr.append(egacd.nfe_mod_arr)
 
         time_arr.append(time.time()-startTime)
         print("Time: ",time_arr[i])
@@ -381,8 +391,12 @@ if __name__ == '__main__':
 
     max_mod = max(mod_arr)
     max_index = mod_arr.index(max_mod)
+    max_pro = np.array(pro_arr[max_index])
+    
     print("BEST:", max(mod_arr))
     print("AVG:", sum(mod_arr)/repeat)
     print("AVG DURATION:",sum(time_arr)/repeat)
     print("AVG NFE:", sum(nfe_arr)/repeat)
     np.save('cluster.npy',{'cluster': cluster_arr[max_index], 'mod': max_mod})
+    if not isReduced:
+        writeProgress(max_pro)
