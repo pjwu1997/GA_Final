@@ -148,3 +148,30 @@ def transfer_cluster(cluster, mtx):
             cluster_np[node] = clusterNum
         clusterNum += 1
     return cluster_np
+
+def concateReduced_ganet_p(cluster, index_eliminated, index_selected, mtx):
+    """
+    Construct full_chromosome and full_cluster.
+    """
+    full_cluster = np.zeros(mtx.shape[0])
+    clusterNum = np.unique(cluster).shape[0]
+    full_cluster[index_selected] = cluster
+
+    # find the nodes connected to outsideGene
+    for outsideGene in index_eliminated:
+        # print('outside: ',np.array(self.full_mtx[outsideGene])[0].shape)
+        neighbors = np.where(np.array(mtx[outsideGene])[0][index_selected]==1)
+        if not neighbors:
+            full_cluster[outsideGene] = clusterNum + 1
+            clusterNum += 1
+        else:
+            neighbors = neighbors[0]
+
+        for index, neighbor in enumerate(neighbors):
+            neighbors[index] = index_selected[neighbor]
+
+            # find which cluster the mutateGene connects to the most
+            changeNum = stats.mode(full_cluster[neighbors])[0][0]
+            fitNeighbor = np.where(full_cluster==changeNum)[0]
+            full_cluster[outsideGene] = changeNum
+    return full_cluster, clusterNum
