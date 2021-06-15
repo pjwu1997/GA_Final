@@ -1,12 +1,11 @@
 import numpy as np
 from scipy import stats
-from src.util import loadDataset
-import src.globals
+import EGACD_MD.globals as globals
 
 class Chromosome():
-    def __init__(self, mtx):
+    def __init__(self):
         # self.mtx = self.loadDataset(path)
-        self.mtx = mtx
+        self.mtx = globals.reduced_mtx
         self.edge = np.count_nonzero(self.mtx == 1) / 2
         self.chromosomeLen = self.mtx.shape[0]
         
@@ -90,4 +89,3 @@ class Chromosome():
             Qvalue -= (outValue / self.edge)**2
         self.modularity = Qvalue
         self.evaluated = True
-        src.globals.nfe += 1
