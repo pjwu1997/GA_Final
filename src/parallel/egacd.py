@@ -379,8 +379,8 @@ if __name__ == '__main__':
         nfe_arr.append(egacd.nfe)
         print("NFE: ",egacd.nfe)
 
-    max_mod = max(max_arr)
-    max_index = max_arr.index(max_mod)
+    max_mod = max(mod_arr)
+    max_index = mod_arr.index(max_mod)
     print("BEST:", max(mod_arr))
     print("AVG:", sum(mod_arr)/repeat)
     print("AVG DURATION:",sum(time_arr)/repeat)

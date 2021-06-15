@@ -31,7 +31,7 @@ def run_ganet(graph, population, generation, r, reduced_mtx, mtx, isReduced, ind
     return {'nfe': nfe, 'cluster': cluster, 'mod': mod, 'time': duration}
     
 if __name__ == '__main__':
-    isReduced = True
+    isReduced = False
     isParallel = True
     cpu_count = os.cpu_count()
     num_workers = 5
