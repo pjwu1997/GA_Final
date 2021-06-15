@@ -27,10 +27,10 @@ if __name__ == '__main__':
         edge = np.count_nonzero(mtx==1) / 2
 
         globals.adj = scipy.sparse.csr_matrix(globals.mtx)
-        globals.reduced_adj = scipy.sparse.csr_matrix(globals.reduced_mtx)
+        # globals.reduced_adj = scipy.sparse.csr_matrix(globals.reduced_mtx)
     else:
         globals.reduced_mtx = loadDataset(path)
-        globals.reduced_adj = scipy.sparse.csr_matrix(globals.reduced_mtx)    
+    globals.reduced_adj = scipy.sparse.csr_matrix(globals.reduced_mtx)    
 
     for i in range(repeat):
         print("=== Start repeat [",i,"] ===")
@@ -40,6 +40,8 @@ if __name__ == '__main__':
         if isReduced:
             full_cluster, clusterNum = concateReduced_ganet(cluster)
             mod = modularity_ganet(full_cluster, globals.mtx)
+        else:
+            mod = modularity_ganet(cluster, globals.reduced_mtx)
         endTime = time.time()
 
         mod_arr.append(mod)
