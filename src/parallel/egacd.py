@@ -368,6 +368,7 @@ if __name__ == '__main__':
             bestModularity = bestChromosome.modularity
         print("Best Modularity: ",bestModularity)
         print("Best Chromosome: ",bestChromosome)
+        print("Best cluster: ", bestChromosome.cluster)
         mod_arr.append(bestModularity)
 
         time_arr.append(time.time()-startTime)
